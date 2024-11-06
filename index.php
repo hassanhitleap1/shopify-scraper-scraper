@@ -27,18 +27,18 @@ function formatProductData($product)
         'Slug' => '',
         'URL' => '',
         'SKU' => mb_substr($product['variants'][0]['sku'] ?? '', 0, 50),
-        'Categories' => '', // Can be empty
+        'Categories' => $product['product_type'] , 
         'Status' => 'published',
         'Is Featured' => false,
         'Brand' => $product['vendor'] ?? '',
         'Product Collections' => '',
         'Labels' => '',
         'Taxes' => '',
-        'Image' => $product['image']['src'] ?? '',
+        'Image' => $product['images'][0]['src'] ?? '',
         'Images' => isset($product['images']) ? implode(', ', array_column($product['images'], 'src')) : '', // Convert array to comma-separated string
         'Price' => (float) ($product['variants'][0]['price'] ?? 0),
-        'Product Attributes' => '',
-        'Import Type' => 'product',
+        'Product Attributes' => count($product['options']) == 0 ||  count($product['options']) == 1 ?  '' : getAttributes($product) ,
+        'Import Type' => count($product['options']) == 0 ||  count($product['options']) == 1 ? 'product' : 'variant'  ,
         'Is Variation Default' => false,
         'Stock Status' => isset($product['variants'][0]['inventory_quantity']) && $product['variants'][0]['inventory_quantity'] > 0 ? 'in_stock' : 'out_of_stock',
         'With Storehouse Management' => true,
@@ -66,6 +66,36 @@ function formatProductData($product)
     ];
 }
 
+
+
+
+function getAttributes($product)
+{
+    $attributes = [];
+
+    // Loop through each option in the product
+    foreach ($product['options'] as $option) {
+        $optionName = $option['name'];
+        
+
+        foreach ($option['values'] as $value) {
+            $attributes[] = "{$optionName}: {$value}";
+        }
+        // Loop through each variant to get the option values
+        // foreach ($product['variants'] as $variant) {
+        //     // Check if the option value exists for this variant
+        //     $optionValue = $variant['option' . ($option['position'] ?? 1)];
+        //     if ($optionValue) {
+        //         $attributes[] = "{$optionName}: {$optionValue}";
+        //     }
+        // }
+        // Break after the first variant to avoid duplication
+        // break;
+    }
+
+    // Join the attributes as a comma-separated string
+    return implode(', ', $attributes);
+}
 
 
 // Main function to scrape and export all pages to an Excel file
